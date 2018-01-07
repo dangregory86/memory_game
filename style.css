@@ -1,0 +1,118 @@
+/* This is a CSS comment. Notice that CSS comments are
+enclosed by different characters than HTML comments. */
+
+/*The whole thing was coded using atom with the beautify package enabled*/
+
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+img {
+  max-height: 250px;
+}
+
+ul>li {
+  display: inline-block;
+  margin-left: 25px;
+  margin-right: 25px;
+  /* You can also add some margins here to make it look prettier */
+  zoom: 1;
+  /* this fix is needed for IE7- */
+  /*Information used from stack overflow*/
+}
+
+h1 {
+  color: white;
+  border-radius: 15px;
+  background: blue;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: sans-serif;
+  font-size: 75px;
+}
+
+h2 {
+  font-family: sans-serif;
+  color: red;
+}
+
+.return {
+  font-family: sans-serif;
+  background: blue;
+  padding: 10px;
+  border-radius: 15px;
+  color: white;
+}
+
+.introdution-text {
+  color: #0064ff;
+  font-size: 25px;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.folks-name {
+  text-align: center;
+  color: #0064ff;
+  padding: 10px;
+}
+
+.folks-picture {
+  height: auto;
+  width: 100%;
+}
+
+.info-pic-section {
+  -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.people-list {
+  display: flex;
+  justify-content: center;
+}
+
+/*details for the images on the main page*/
+
+.big-image {
+  display: block;
+  margin: auto;
+  height: 100%;
+  right: 0px;
+  margin-right: 25px;
+}
+
+.description {
+  font-family: sans-serif;
+  color: darkred;
+}
+
+.caption {
+  right: 0px;
+  margin-left: 25%
+}
+
+.column {
+  float: left;
+  /*width: 60%;*/
+}
+
+.left {
+  width: 75%;
+  background: #f7f7ca;
+  padding-left: 15px;
+  border-radius: 15px;
+}
+
+.right {
+  width: 25%;
+}
+
+/* CSS allows you to give your page style (colors, shapes, fonts, etc.)
+You can apply CSS elements to entire HTML classes.*/
