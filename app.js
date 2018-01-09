@@ -1,11 +1,14 @@
 /*
  * Create a list that holds all of your cards
- */ 
- //variables
- var previousCard = "";
- var previousID = "";
- var count = 0;
- var numMatched = 0;
+ */
+//variables
+var timer;
+var stars = 3;
+var previousCard = "";
+var previousID = "";
+var count = 0;
+var numMatched = 0;
+var modal = $( "#myModal" );
 //an array list of possible cards
 var cards = [ 'A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F', 'G', 'G', 'H', 'H' ];
 //the card object using jQuery
@@ -16,10 +19,79 @@ var card = $( ".card" );
  *   - loop through each card and create its HTML
  *   - add each card's HTML to the page
  */
+//function to restart the Game
+function win() {
+	console.log( numMatched );
+	if ( numMatched > 15 ) {
+		clearInterval( timer );
+		var endTime = $( ".Timer" ).text();
+		var congratulations = winStatement( stars );
+		//set the modal text
+		$( "#modal-text" ).html( congratulations + "<br/>It took you " + ( count + 1 ) + " moves in " + endTime + "<br />Would you like to play again?" );
+		modal.css( 'display', 'block' );
+	}
+
+}
+
+//function to form the winner winStatement
+function winStatement( num ) {
+	if ( num === 3 ) {
+		return "Wow, 3 stars, what a champ";
+	} else if ( num === 2 ) {
+		return "Nearly there... 2 stars";
+	} else if ( num === 1 ) {
+		return "Better luck next time... 1 star";
+	} else {
+		return "What happened out there... no stars";
+	}
+}
+
+//functions to close the modal
+function restartYes() {
+	restartGame();
+	modal.css( 'display', 'none' );
+}
+
+function restartNo() {
+	modal.css( 'display', 'none' );
+}
+
+//function to restart the Game
+function restartGame() {
+	//reset the score, timer and reset the stars.
+	clearInterval( timer );
+	previousCard = "";
+	previousID = "";
+	count = 0;
+	numMatched = 0;
+	increaseScore();
+	$( '.Timer' ).text( "0 Seconds" );
+	showStars();
+	//reshuffle the deck
+	setup();
+	turnAllOver();
+}
+
+//function to remove starts every few Moves
+function removeStar() {
+	if ( stars > 0 ) {
+		var star = "#star-" + stars;
+		$( star ).hide( "slow" );
+		stars--;
+	}
+}
+
+function showStars() {
+	stars = 3;
+	for ( var star = 1; star < 4; star++ ) {
+		var str = "#star-" + star;
+		$( str ).show();
+	}
+}
 
 //function to increase the score on the screen
-function increaseScore(){
-  $(".moves").text(count);
+function increaseScore() {
+	$( ".moves" ).text( count );
 }
 
 //function to get the detail to go on the card
@@ -37,12 +109,20 @@ function cardsMatch( txta, txtb ) {
 }
 
 //shuffle the cards and enter the details onto each card in the page
-cards = shuffle( cards );
-card.each( function( index, el ) {
-	$( this ).attr( 'id', "cd" + index );
-	var txt = returnCardDetail( index );
-	$( this ).text( txt );
-} );
+function setup() {
+	cards = shuffle( cards );
+	card.each( function( index, el ) {
+		$( this ).attr( 'id', "cd" + index );
+		var txt = returnCardDetail( index );
+		$( this ).text( txt );
+	} );
+}
+
+function turnAllOver() {
+	card.each( function( index, el ) {
+		$( this ).removeClass( 'match open show' );
+	} );
+}
 
 //highlight the card the mouse is over by adding a red border
 card.mouseover( function( event ) {
@@ -60,8 +140,8 @@ card.mouseleave( function( event ) {
 
 //turn the wrong cards back over
 function turnBack( previous ) {
-		var previous = "#" + previous;
-		$( previous ).toggleClass( 'open show' );
+	var previous = "#" + previous;
+	$( previous ).removeClass( 'open show' );
 }
 
 //matched
@@ -73,31 +153,35 @@ function matched( _this, previous ) {
 //turn the card over on clicked
 card.mousedown( function( event ) {
 	turnOver( $( this ) );
-  increaseScore();
+	increaseScore();
 } );
 
 //turn the card over
 function turnOver( _this ) {
-	_this.toggleClass( 'open show' );
-	var thisId = _this.attr( 'id' );
-	var thisCard = _this.text();
-	if ( count < 1 ) {
+	var thisId = _this.attr( 'id' ); //gets the id of the current card html object
+	var thisCard = _this.text(); //gets the letter of the current card
+	if ( count < 1 ) { // starting the game timer/score/previous variables
+		var start = new Date;
+		startTimer( start );
+		_this.addClass( 'open show' );
 		previousCard = thisCard;
 		previousID = thisId;
 	} else {
-		if ( thisId === previousID ) {
-			// previousID = null;
-		} else if ( thisCard === previousCard && thisId !== previousID ) {
+		if ( thisId === previousID ) { // ensuring nothing happens is the same card is clicked twice
+
+		} else if ( thisCard === previousCard && thisId !== previousID ) { // if the cards match
+			_this.addClass( 'open show' );
 			matched( thisId, previousID );
-      numMatched += 2;
-			// count = 0;
-		} else {
+			numMatched += 2;
+			win();
+		} else { // if the cards don't match turn the previous card back over
+			_this.addClass( 'open show' );
 			turnBack( previousID );
 			previousCard = thisCard;
 			previousID = thisId;
 		}
 	}
-  console.log(previousID);
+	checkClicks();
 	++count;
 }
 
@@ -118,8 +202,21 @@ function shuffle( array ) {
 
 	return array;
 }
+//set interval taken from a stack overflow thread
+function startTimer( time ) {
+	timer = setInterval( function() {
+		$( '.Timer' ).text( Math.round( ( new Date - time ) / 1000, 0 ) + " Seconds" );
+	}, 1000 );
+}
 
+//function to check if the clicks have reached enough to remove a star
+function checkClicks() {
+	if ( count > 1 && count % 15 === 0 ) {
+		removeStar();
+	}
+}
 
+setup();
 /*
  * set up the event listener for a card. If a card is clicked:
  *  - display the card's symbol (put this functionality in another function that you call from this one)
