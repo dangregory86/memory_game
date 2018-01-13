@@ -10,6 +10,7 @@ var numMatched = 0;
 var modal = $( "#myModal" );
 var won = false;
 var anim = false;
+var pairOfCards = [];
 //an array list of possible cards
 var cards = [ 'A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F', 'G', 'G', 'H', 'H' ];
 //the card object using jQuery
@@ -62,7 +63,7 @@ function win() {
 		won = true; //sets the boolean of won to true, preventing the game from carrying on
 		setTimeout( function() {
 			anim = true;
-		} );
+		}, 1000 );
 		clearInterval( timer );
 		var endTime = $( ".Timer" ).text();
 		var congratulations = winStatement( stars );
@@ -217,14 +218,26 @@ card.mouseleave( function( event ) {
  * @description A function to turn back the previous card if it didn't match
  * @params It takes a card HTML object.
  */
-function turnBack( previous ) {
-	var previous = "#" + previous;
-	thisCard = $( previous );
-	wrongCard( thisCard ).done( function() {
-		thisCard.removeClass( 'open show' );
-		thisCard.find( "img" ).hide();
-		anim = false;
-	} );
+function turnBack() {
+	previousCard = pairOfCards[ 0 ];
+	currentCard = pairOfCards[ 1 ];
+	setTimeout( function() {
+		turnCardOver( previousCard ).done( function() {
+			previousCard.removeClass( 'open show' );
+			previousCard.find( "img" ).hide();
+			turnCardOver( previousCard );
+		} );
+		turnCardOver( currentCard ).done( function() {
+			currentCard.removeClass( 'open show' );
+			currentCard.find( "img" ).hide();
+			turnCardOver( currentCard ).done( function() {
+				anim = false;
+				pairOfCards = [];
+			} );
+		} );
+	}, 500 );
+
+	console.log( pairOfCards );
 }
 
 /*
@@ -237,15 +250,10 @@ function matched( _this, previous ) {
 	setTimeout( function() {
 		anim = false;
 	}, 1000 );
-	previousCard = "";
-	previousID = "";
-	++count;
-	var _thisCard = $( "#" + _this );
-	var _previousCard = $( "#" + previous );
-	_thisCard.addClass( 'match' );
-	_previousCard.addClass( 'match' );
-	_thisCard.find( "img" ).show();
-	_previousCard.find( "img" ).show();
+	_this.addClass( 'match' );
+	previous.addClass( 'match' );
+	_this.find( "img" ).show();
+	previous.find( "img" ).show();
 }
 
 /*
@@ -253,15 +261,14 @@ function matched( _this, previous ) {
  * It checks to see if the game has been finished.
  */
 card.mousedown( function( event ) {
-	if ( won != true || anim != true ) {
+	if ( won === true || anim === true || pairOfCards.length > 1 ) {} else {
 		var thisId = $( this );
 		turnCardOver( thisId ).done( function() {
-			turnOver( thisId );
-			increaseScore();
+			thisId.find( "img" ).show();
+			thisId.addClass( 'open show' );
 			turnCardOver( thisId ).done( function() {
-				if ( count < 2 && won != true ) {
-					anim = false;
-				}
+				turnOver( thisId );
+				anim = false;
 			} );
 		} );
 	}
@@ -272,42 +279,37 @@ card.mousedown( function( event ) {
  * @params. It takes a card HTML object as it's input
  */
 function turnOver( _this ) {
-	_this.find( "img" ).show();
-	completeMove( _this );
+	if ( _this.hasClass( 'match' ) ) {} else if ( pairOfCards.length > 0 && _this.attr( 'id' ) === pairOfCards[ 0 ].attr( 'id' ) ) {} else if ( pairOfCards.length > 1 ) {} else {
+		pairOfCards.push( _this );
+		if ( count < 1 || pairOfCards.length === 2 ) {
+			completeMove( _this );
+		}
+		count++;
+		increaseScore();
+	}
 }
 
 /*
  * @description a function to complete the moves
  * @params is a card object
  */
-function completeMove( card_object ) {
-	var thisId = card_object.attr( 'id' ); //gets the id of the current card html object
-	var thisCard = card_object.html(); //gets the letter of the current card
+function completeMove() {
 	if ( count < 1 ) { // starting the game timer/score/previous variables
+		console.log( "boo" );
 		var start = new Date;
 		startTimer( start );
-		card_object.addClass( 'open show' );
-		previousCard = thisCard;
-		previousID = thisId;
-		++count;
 	} else {
-		if ( thisId === previousID ) { // ensuring nothing happens is the same card is clicked twice
-
-		} else if ( thisCard === previousCard && thisId !== previousID ) { // if the cards match
-			card_object.addClass( 'open show' );
-			matched( thisId, previousID );
-		} else { // if the cards don't match turn the previous card back over
-			card_object.addClass( 'open show' );
-			if ( previousCard !== "" ) {
-				turnBack( previousID );
-			}
-			previousCard = thisCard;
-			previousID = thisId;
-			++count;
+		if ( pairOfCards[ 1 ].html() === pairOfCards[ 0 ].html() ) { // if the cards match
+			matched( pairOfCards[ 1 ], pairOfCards[ 0 ] );
+			pairOfCards = [];
+		} else if ( pairOfCards.length > 1 ) { // if the cards don't match turn the previous card back over
+			turnBack();
+			pairOfCards = [];
 		}
 	}
 	checkClicks();
 }
+
 
 // Shuffle function from http://stackoverflow.com/a/2450976
 function shuffle( array ) {
@@ -343,32 +345,12 @@ function checkClicks() {
 
 /*
  * @description All the functions for the animation.
- *@params for them al is a card HTML object
+ *	@params for them al is a card HTML object
  * @returns {promise}
  */
 function turnCardOver( cardObject ) {
 	anim = true;
 	return cardObject.slideToggle( "fast" ).promise();
-}
-
-/*
- * @description All the functions for the animation.
- * @params for them al is a card HTML object
- * @returns {promise}
- */
-function wrongCard( cardObject ) {
-	var interval = 100;
-	var distance = 10;
-	var times = 4;
-	anim = true;
-	for ( var iter = 0; iter < ( times + 1 ); iter++ ) {
-		cardObject.animate( {
-			left: ( ( iter % 2 == 0 ? distance : distance * -1 ) )
-		}, interval );
-	}
-	return cardObject.animate( {
-		left: 0
-	}, interval ).promise();
 }
 
 setup();
